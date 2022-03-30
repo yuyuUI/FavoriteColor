@@ -9,9 +9,13 @@ import SwiftUI
 
 @main
 struct FavoriteColorApp: App {
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-        }
+  var body: some Scene {
+    WindowGroup {
+      ContentView(store: .init(
+        initialState: .init(),
+        reducer: AppReducer,
+        environment: .live)
+      )
     }
+  }
 }
