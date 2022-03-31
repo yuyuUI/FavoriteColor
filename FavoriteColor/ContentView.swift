@@ -8,23 +8,21 @@
 import ComposableArchitecture
 import SwiftUI
 
-struct SharedData: Equatable, Identifiable {
-  var id: UUID
+struct SharedData: Equatable {
   var people: [UUID: Person]
 }
 
 struct AppState: Equatable {
-  var shared: SharedData = .init(id: UUID(), people: Family)
+  var family = Family
 
-  var me: PersonState {
-    get {
-      .init(id: myUUID, shared: shared)
-    }
-    set {
-      guard shared.id != newValue.shared.id else { return }
-      shared = newValue.shared
-    }
+  var sharedData: SharedData {
+    .init(people: family)
   }
+
+  var me: PersonState? = {
+    guard let me = Family[myUUID] else { return nil }
+    return .init(id: myUUID, person: me)
+  }()
 }
 
 enum AppAction: Equatable {
@@ -42,13 +40,43 @@ let AppReducer = Reducer<
   AppAction,
   AppEnvironment
 >.combine(
-  PersonReducer.pullback(
+  PersonReducer.optional().pullback(
     state: \.me,
     action: /AppAction.person,
     environment: { _ in .live }
-  )
+  ),
+  updatePersonReducer
 )
 .debug()
+
+let updatePersonReducer = Reducer<
+  AppState,
+  AppAction,
+  AppEnvironment
+> { state, action, environment in
+  switch action {
+  case let .person(personAction):
+    var personAction = personAction
+    var isStop = false
+
+    while !isStop {
+      switch personAction {
+      case let .changeColor(id, color):
+        state.family[id]?.color = color
+        isStop = true
+      case let .nextParent(_, parentAction):
+        personAction = parentAction
+      case let .nextChild(_, childAction):
+        personAction = childAction
+      case .updateParentsAndChildren,
+           .updateSharedData:
+        isStop = true
+      }
+    }
+
+    return .none
+  }
+}
 
 struct ContentView: View {
   typealias ViewStoreType = ViewStore<AppState, AppAction>
@@ -57,12 +85,18 @@ struct ContentView: View {
   var body: some View {
     WithViewStore(store) { viewStore in
       NavigationView {
-        PersonView(
-          store: store.scope(
-            state: \.me,
-            action: AppAction.person
+        IfLetStore(store.scope(
+          state: \.me,
+          action: AppAction.person
+        )) { store in
+          PersonView(
+            store: store,
+            sharedData: Binding(
+              get: { viewStore.sharedData },
+              set: { _ in }
+            )
           )
-        )
+        }
       }
       .navigationViewStyle(.stack)
     }

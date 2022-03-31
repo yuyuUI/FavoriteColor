@@ -17,42 +17,16 @@ struct Person: Equatable {
 
 struct PersonState: Equatable, Identifiable {
   let id: UUID
-  var shared: SharedData
-
-  var person: Person {
-    shared.people[id]!
-  }
-
-  var parentState: PersonState? {
-    get {
-      guard let parentId = person.parentId else { return nil }
-      return .init(id: parentId, shared: shared)
-    }
-    set {
-      guard let newValue = newValue, shared.id != newValue.shared.id else { return }
-      shared = newValue.shared
-    }
-  }
-
-  var childrenStates: IdentifiedArrayOf<PersonState> {
-    get {
-      IdentifiedArray(
-        uniqueElements:
-        person.childrenIds.compactMap { childId in
-          .init(id: childId, shared: shared)
-        }
-      )
-    }
-    set {
-      guard let newShared = newValue.map(\.shared).filter({ $0.id != shared.id }).first else { return }
-      shared = newShared
-    }
-  }
+  var person: Person
+  var parentStates: IdentifiedArrayOf<PersonState> = []
+  var childrenStates: IdentifiedArrayOf<PersonState> = []
 }
 
 indirect enum PersonAction: Equatable {
-  case changeColor(Color)
-  case nextParent(PersonAction)
+  case changeColor(UUID, Color)
+  case updateParentsAndChildren(SharedData)
+  case updateSharedData(SharedData)
+  case nextParent(UUID, PersonAction)
   case nextChild(UUID, PersonAction)
 }
 
@@ -68,13 +42,28 @@ let PersonReducer = Reducer<
   PersonEnvironment
 >.recurse { `self`, state, action, environment in
   switch action {
-  case let .changeColor(newColor):
-    state.shared.people[state.id]?.color = newColor
-    state.shared.id = UUID()
+  case .changeColor:
+    return .none
+  case let .updateParentsAndChildren(sharedData):
+    if let parentId = state.person.parentId,
+       let parent = sharedData.people[parentId] {
+      state.parentStates = IdentifiedArray(uniqueElements: [.init(id: parentId, person: parent)])
+    }
+    state.childrenStates = IdentifiedArray(
+      uniqueElements: state.person.childrenIds.compactMap { childId -> PersonState? in
+        guard let child = sharedData.people[childId] else { return nil }
+        return .init(id: childId, person: child)
+      }
+    )
+    return .none
+  case let .updateSharedData(sharedData):
+    if let newPerson = sharedData.people[state.id] {
+      state.person = newPerson
+    }
     return .none
   case .nextParent:
-    return self.optional().pullback(
-      state: \.parentState,
+    return self.forEach(
+      state: \.parentStates,
       action: /PersonAction.nextParent,
       environment: { $0 }
     )
@@ -92,6 +81,7 @@ let PersonReducer = Reducer<
 struct PersonView: View {
   typealias ViewStoreType = ViewStore<PersonState, PersonAction>
   let store: Store<PersonState, PersonAction>
+  @Binding var sharedData: SharedData
 
   var body: some View {
     WithViewStore(store) { viewStore in
@@ -99,10 +89,16 @@ struct PersonView: View {
         buildColor(viewStore)
         Divider()
         buildChangeColor(viewStore)
-        buildParentLink(viewStore)
+        buildParentLinks(viewStore)
         buildChildrenLinks(viewStore)
       }
       .navigationTitle(viewStore.person.name)
+      .onChange(of: sharedData) { sharedData in
+        viewStore.send(.updateSharedData(sharedData))
+      }
+      .onAppear {
+        viewStore.send(.updateParentsAndChildren(sharedData))
+      }
     }
   }
 
@@ -121,7 +117,7 @@ struct PersonView: View {
 
       ForEach([Color.blue, .green, .yellow, .red], id: \.self) { color in
         Button {
-          viewStore.send(.changeColor(color))
+          viewStore.send(.changeColor(viewStore.id, color))
         } label: {
           color
             .frame(width: 16, height: 16)
@@ -132,14 +128,16 @@ struct PersonView: View {
   }
 
   @ViewBuilder
-  private func buildParentLink(_ viewStore: ViewStoreType) -> some View {
-    IfLetStore(store.scope(
-      state: \.parentState,
-      action: PersonAction.nextParent
-    )) { nextStore in
-      VStack {
+  private func buildParentLinks(_ viewStore: ViewStoreType) -> some View {
+    HStack {
+      ForEachStore(
+        store.scope(
+          state: \.parentStates,
+          action: PersonAction.nextParent
+        )
+      ) { nextStore in
         NavigationLink {
-          PersonView(store: nextStore)
+          PersonView(store: nextStore, sharedData: $sharedData)
         } label: {
           WithViewStore(nextStore) { nextViewStore in
             Text(nextViewStore.person.name)
@@ -159,7 +157,7 @@ struct PersonView: View {
         )
       ) { nextStore in
         NavigationLink {
-          PersonView(store: nextStore)
+          PersonView(store: nextStore, sharedData: $sharedData)
         } label: {
           WithViewStore(nextStore) { nextViewStore in
             Text(nextViewStore.person.name)
@@ -173,28 +171,22 @@ struct PersonView: View {
 #if DEBUG
   struct PersonView_Previews: PreviewProvider {
     static let id = UUID()
+    static let person = Person(
+      name: "Me",
+      color: .green,
+      parentId: nil,
+      childrenIds: []
+    )
 
     static var previews: some View {
       NavigationView {
         PersonView(
           store: .init(
-            initialState: .init(
-              id: UUID(),
-              shared: .init(
-                id: id,
-                people: [
-                  id: .init(
-                    name: "Me",
-                    color: .green,
-                    parentId: nil,
-                    childrenIds: []
-                  ),
-                ]
-              )
-            ),
+            initialState: .init(id: UUID(), person: person),
             reducer: PersonReducer,
             environment: .live
-          )
+          ),
+          sharedData: .constant(.init(people: [id: person]))
         )
       }
     }
