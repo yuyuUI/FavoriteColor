@@ -8,21 +8,28 @@
 import ComposableArchitecture
 import SwiftUI
 
-struct SharedData: Equatable, Identifiable {
-  var id: UUID
+struct Person: Equatable {
+  let name: String
+  var color: Color
+  let parentIds: [UUID]
+  let childrenIds: [UUID]
+}
+
+struct SharedData: Equatable {
   var people: [UUID: Person]
 }
 
 struct AppState: Equatable {
-  var shared: SharedData = .init(id: UUID(), people: Family)
+  var shared: SharedData = .init(people: Family)
+  var myViewState: PersonViewState = .init(id: myUUID)
 
   var me: PersonState {
     get {
-      .init(id: myUUID, shared: shared)
+      .init(shared: shared, viewState: myViewState)
     }
     set {
-      guard shared.id != newValue.shared.id else { return }
       shared = newValue.shared
+      myViewState = newValue.viewState
     }
   }
 }

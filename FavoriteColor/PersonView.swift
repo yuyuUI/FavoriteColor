@@ -8,51 +8,69 @@
 import ComposableArchitecture
 import SwiftUI
 
-struct Person: Equatable {
-  let name: String
-  var color: Color
-  let parentId: UUID?
-  let childrenIds: [UUID]
+struct PersonViewState: Equatable, Identifiable {
+  let id: UUID
+  var nextId: UUID?
+  var parentViewStates: IdentifiedArrayOf<PersonViewState> = []
+  var childrenViewStates: IdentifiedArrayOf<PersonViewState> = []
 }
 
 struct PersonState: Equatable, Identifiable {
-  let id: UUID
   var shared: SharedData
+  var viewState: PersonViewState
 
-  var person: Person {
-    shared.people[id]!
-  }
+  var id: UUID { viewState.id }
 
-  var parentState: PersonState? {
+  var person: Person? {
     get {
-      guard let parentId = person.parentId else { return nil }
-      return .init(id: parentId, shared: shared)
+      shared.people[id]
     }
     set {
-      guard let newValue = newValue, shared.id != newValue.shared.id else { return }
-      shared = newValue.shared
+      shared.people[id] = newValue
+    }
+  }
+
+  var parentStates: IdentifiedArrayOf<PersonState> {
+    get {
+      IdentifiedArray(uniqueElements: person?.parentIds.compactMap { parentId -> PersonState? in
+        let parentViewState = viewState.parentViewStates[id: parentId] ?? .init(id: parentId)
+        return .init(shared: shared, viewState: parentViewState)
+      } ?? [])
+    }
+    set {
+      // update states only from pushed next person
+      guard let nextId = viewState.nextId,
+            let nextPerson = newValue[id: nextId] else {
+        return
+      }
+      shared = nextPerson.shared
+      viewState.parentViewStates[id: nextId] = nextPerson.viewState
     }
   }
 
   var childrenStates: IdentifiedArrayOf<PersonState> {
     get {
-      IdentifiedArray(
-        uniqueElements:
-        person.childrenIds.compactMap { childId in
-          .init(id: childId, shared: shared)
-        }
-      )
+      IdentifiedArray(uniqueElements: person?.childrenIds.compactMap { childId -> PersonState? in
+        let childViewState = viewState.childrenViewStates[id: childId] ?? .init(id: childId)
+        return .init(shared: shared, viewState: childViewState)
+      } ?? [])
     }
     set {
-      guard let newShared = newValue.map(\.shared).filter({ $0.id != shared.id }).first else { return }
-      shared = newShared
+      // update states only from pushed next person
+      guard let nextId = viewState.nextId,
+            let nextPerson = newValue[id: nextId] else {
+        return
+      }
+      shared = nextPerson.shared
+      viewState.childrenViewStates[id: nextId] = nextPerson.viewState
     }
   }
 }
 
 indirect enum PersonAction: Equatable {
   case changeColor(Color)
-  case nextParent(PersonAction)
+  case pushToNextPerson(UUID, Bool)
+  case nextParent(UUID, PersonAction)
   case nextChild(UUID, PersonAction)
 }
 
@@ -69,12 +87,14 @@ let PersonReducer = Reducer<
 >.recurse { `self`, state, action, environment in
   switch action {
   case let .changeColor(newColor):
-    state.shared.people[state.id]?.color = newColor
-    state.shared.id = UUID()
+    state.person?.color = newColor
+    return .none
+  case let .pushToNextPerson(nextId, isPushing):
+    state.viewState.nextId = isPushing ? nextId : nil
     return .none
   case .nextParent:
-    return self.optional().pullback(
-      state: \.parentState,
+    return self.forEach(
+      state: \.parentStates,
       action: /PersonAction.nextParent,
       environment: { $0 }
     )
@@ -102,16 +122,18 @@ struct PersonView: View {
         buildParentLink(viewStore)
         buildChildrenLinks(viewStore)
       }
-      .navigationTitle(viewStore.person.name)
+      .navigationTitle(viewStore.person?.name ?? "")
     }
   }
 
   @ViewBuilder
   private func buildColor(_ viewStore: ViewStoreType) -> some View {
-    viewStore.person.color
-      .frame(width: 100, height: 100)
-      .cornerRadius(16)
-      .padding()
+    if let color = viewStore.person?.color {
+      color
+        .frame(width: 100, height: 100)
+        .cornerRadius(16)
+        .padding()
+    }
   }
 
   @ViewBuilder
@@ -133,16 +155,21 @@ struct PersonView: View {
 
   @ViewBuilder
   private func buildParentLink(_ viewStore: ViewStoreType) -> some View {
-    IfLetStore(store.scope(
-      state: \.parentState,
-      action: PersonAction.nextParent
-    )) { nextStore in
-      VStack {
-        NavigationLink {
-          PersonView(store: nextStore)
-        } label: {
-          WithViewStore(nextStore) { nextViewStore in
-            Text(nextViewStore.person.name)
+    HStack {
+      ForEachStore(
+        store.scope(
+          state: \.parentStates,
+          action: PersonAction.nextParent
+        )
+      ) { nextStore in
+        WithViewStore(nextStore) { nextViewStore in
+          NavigationLink(isActive: Binding(
+            get: { viewStore.viewState.nextId == nextViewStore.id },
+            set: { isPushing in viewStore.send(.pushToNextPerson(nextViewStore.id, isPushing)) }
+          )) {
+            PersonView(store: nextStore)
+          } label: {
+            Text(nextViewStore.person?.name ?? "")
           }
         }
       }
@@ -158,11 +185,14 @@ struct PersonView: View {
           action: PersonAction.nextChild
         )
       ) { nextStore in
-        NavigationLink {
-          PersonView(store: nextStore)
-        } label: {
-          WithViewStore(nextStore) { nextViewStore in
-            Text(nextViewStore.person.name)
+        WithViewStore(nextStore) { nextViewStore in
+          NavigationLink(isActive: Binding(
+            get: { viewStore.viewState.nextId == nextViewStore.id },
+            set: { isPushing in viewStore.send(.pushToNextPerson(nextViewStore.id, isPushing)) }
+          )) {
+            PersonView(store: nextStore)
+          } label: {
+            Text(nextViewStore.person?.name ?? "")
           }
         }
       }
@@ -173,24 +203,20 @@ struct PersonView: View {
 #if DEBUG
   struct PersonView_Previews: PreviewProvider {
     static let id = UUID()
+    static let person = Person(
+      name: "Me",
+      color: .green,
+      parentIds: [],
+      childrenIds: []
+    )
 
     static var previews: some View {
       NavigationView {
         PersonView(
           store: .init(
             initialState: .init(
-              id: UUID(),
-              shared: .init(
-                id: id,
-                people: [
-                  id: .init(
-                    name: "Me",
-                    color: .green,
-                    parentId: nil,
-                    childrenIds: []
-                  ),
-                ]
-              )
+              shared: .init(people: [id: person]),
+              viewState: .init(id: id)
             ),
             reducer: PersonReducer,
             environment: .live
