@@ -8,11 +8,15 @@
 import ComposableArchitecture
 import SwiftUI
 
+indirect enum NextPersonState: Equatable {
+  case none
+  case next(PersonViewState)
+}
+
 struct PersonViewState: Equatable, Identifiable {
   let id: UUID
   var nextId: UUID?
-  var parentViewStates: IdentifiedArrayOf<PersonViewState> = []
-  var childrenViewStates: IdentifiedArrayOf<PersonViewState> = []
+  var nextPersonViewState: NextPersonState = .none
 }
 
 struct PersonState: Equatable, Identifiable {
@@ -30,48 +34,32 @@ struct PersonState: Equatable, Identifiable {
     }
   }
 
-  var parentStates: IdentifiedArrayOf<PersonState> {
-    get {
-      IdentifiedArray(uniqueElements: person?.parentIds.compactMap { parentId -> PersonState? in
-        let parentViewState = viewState.parentViewStates[id: parentId] ?? .init(id: parentId)
-        return .init(shared: shared, viewState: parentViewState)
-      } ?? [])
-    }
-    set {
-      // update states only from pushed next person
-      guard let nextId = viewState.nextId,
-            let nextPerson = newValue[id: nextId] else {
-        return
-      }
-      shared = nextPerson.shared
-      viewState.parentViewStates[id: nextId] = nextPerson.viewState
-    }
+  var isPushingNextPerson: Bool {
+    nextPersonState != nil
   }
 
-  var childrenStates: IdentifiedArrayOf<PersonState> {
+  var nextPersonState: PersonState? {
     get {
-      IdentifiedArray(uniqueElements: person?.childrenIds.compactMap { childId -> PersonState? in
-        let childViewState = viewState.childrenViewStates[id: childId] ?? .init(id: childId)
-        return .init(shared: shared, viewState: childViewState)
-      } ?? [])
+      switch viewState.nextPersonViewState {
+      case .none:
+        return nil
+      case let .next(nextViewState):
+        return .init(shared: shared, viewState: nextViewState)
+      }
     }
     set {
-      // update states only from pushed next person
-      guard let nextId = viewState.nextId,
-            let nextPerson = newValue[id: nextId] else {
-        return
-      }
-      shared = nextPerson.shared
-      viewState.childrenViewStates[id: nextId] = nextPerson.viewState
+      guard let nextPersonState = newValue else { return }
+      shared = nextPersonState.shared
+      viewState.nextPersonViewState = .next(nextPersonState.viewState)
     }
   }
 }
 
 indirect enum PersonAction: Equatable {
   case changeColor(Color)
-  case pushToNextPerson(UUID, Bool)
-  case nextParent(UUID, PersonAction)
-  case nextChild(UUID, PersonAction)
+  case loadNextPerson(UUID)
+  case setPushingNextPerson(Bool)
+  case nextPerson(PersonAction)
 }
 
 struct PersonEnvironment {}
@@ -89,20 +77,18 @@ let PersonReducer = Reducer<
   case let .changeColor(newColor):
     state.person?.color = newColor
     return .none
-  case let .pushToNextPerson(nextId, isPushing):
-    state.viewState.nextId = isPushing ? nextId : nil
+  case let .loadNextPerson(nextId):
+    state.viewState.nextPersonViewState = .next(.init(id: nextId))
     return .none
-  case .nextParent:
-    return self.forEach(
-      state: \.parentStates,
-      action: /PersonAction.nextParent,
-      environment: { $0 }
-    )
-    .run(&state, action, environment)
-  case .nextChild:
-    return self.forEach(
-      state: \.childrenStates,
-      action: /PersonAction.nextChild,
+  case let .setPushingNextPerson(isPushing):
+    if !isPushing {
+      state.viewState.nextPersonViewState = .none
+    }
+    return .none
+  case .nextPerson:
+    return self.optional().pullback(
+      state: \.nextPersonState,
+      action: /PersonAction.nextPerson,
       environment: { $0 }
     )
     .run(&state, action, environment)
@@ -119,8 +105,9 @@ struct PersonView: View {
         buildColor(viewStore)
         Divider()
         buildChangeColor(viewStore)
-        buildParentLink(viewStore)
-        buildChildrenLinks(viewStore)
+        buildParentStack(viewStore)
+        buildChildrenStack(viewStore)
+        buildNavigationLink(viewStore)
       }
       .navigationTitle(viewStore.person?.name ?? "")
     }
@@ -154,22 +141,28 @@ struct PersonView: View {
   }
 
   @ViewBuilder
-  private func buildParentLink(_ viewStore: ViewStoreType) -> some View {
-    HStack {
-      ForEachStore(
-        store.scope(
-          state: \.parentStates,
-          action: PersonAction.nextParent
-        )
-      ) { nextStore in
-        WithViewStore(nextStore) { nextViewStore in
-          NavigationLink(isActive: Binding(
-            get: { viewStore.viewState.nextId == nextViewStore.id },
-            set: { isPushing in viewStore.send(.pushToNextPerson(nextViewStore.id, isPushing)) }
-          )) {
-            PersonView(store: nextStore)
-          } label: {
-            Text(nextViewStore.person?.name ?? "")
+  private func buildParentStack(_ viewStore: ViewStoreType) -> some View {
+    if let parentId = viewStore.person?.parentId, let parent = viewStore.shared.people[parentId] {
+      HStack {
+        Text("Parent:")
+        Button(parent.name) {
+          viewStore.send(.loadNextPerson(parentId))
+        }
+      }
+    }
+  }
+
+  @ViewBuilder
+  private func buildChildrenStack(_ viewStore: ViewStoreType) -> some View {
+    if let childrenIds = viewStore.person?.childrenIds, !childrenIds.isEmpty {
+      HStack {
+        Text("Children:")
+
+        ForEach(childrenIds, id: \.self) { childId in
+          if let child = viewStore.shared.people[childId] {
+            Button(child.name) {
+              viewStore.send(.loadNextPerson(childId))
+            }
           }
         }
       }
@@ -177,25 +170,17 @@ struct PersonView: View {
   }
 
   @ViewBuilder
-  private func buildChildrenLinks(_ viewStore: ViewStoreType) -> some View {
-    HStack {
-      ForEachStore(
-        store.scope(
-          state: \.childrenStates,
-          action: PersonAction.nextChild
-        )
-      ) { nextStore in
-        WithViewStore(nextStore) { nextViewStore in
-          NavigationLink(isActive: Binding(
-            get: { viewStore.viewState.nextId == nextViewStore.id },
-            set: { isPushing in viewStore.send(.pushToNextPerson(nextViewStore.id, isPushing)) }
-          )) {
-            PersonView(store: nextStore)
-          } label: {
-            Text(nextViewStore.person?.name ?? "")
-          }
-        }
-      }
+  private func buildNavigationLink(_ viewStore: ViewStoreType) -> some View {
+    NavigationLink(isActive: viewStore.binding(
+      get: \.isPushingNextPerson,
+      send: PersonAction.setPushingNextPerson
+    )) {
+      IfLetStore(
+        store.scope(state: \.nextPersonState, action: PersonAction.nextPerson),
+        then: PersonView.init
+      )
+    } label: {
+      EmptyView()
     }
   }
 }
@@ -206,7 +191,7 @@ struct PersonView: View {
     static let person = Person(
       name: "Me",
       color: .green,
-      parentIds: [],
+      parentId: nil,
       childrenIds: []
     )
 

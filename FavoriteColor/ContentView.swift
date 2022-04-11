@@ -11,7 +11,7 @@ import SwiftUI
 struct Person: Equatable {
   let name: String
   var color: Color
-  let parentIds: [UUID]
+  let parentId: UUID?
   let childrenIds: [UUID]
 }
 
@@ -44,16 +44,14 @@ extension AppEnvironment {
   static var live = Self()
 }
 
-let AppReducer = Reducer<
+let AppReducer: Reducer<
   AppState,
   AppAction,
   AppEnvironment
->.combine(
-  PersonReducer.pullback(
-    state: \.me,
-    action: /AppAction.person,
-    environment: { _ in .live }
-  )
+> = PersonReducer.pullback(
+  state: \.me,
+  action: /AppAction.person,
+  environment: { _ in .live }
 )
 .debug()
 

@@ -15,28 +15,28 @@ let daughterUUID = UUID()
 var parent = Person(
   name: "Parent",
   color: .green,
-  parentIds: [],
+  parentId: nil,
   childrenIds: [myUUID]
 )
 
 var me = Person(
   name: "Me",
   color: .green,
-  parentIds: [parentUUID],
+  parentId: parentUUID,
   childrenIds: [sonUUID, daughterUUID]
 )
 
 var son = Person(
   name: "Son",
   color: .green,
-  parentIds: [myUUID],
+  parentId: myUUID,
   childrenIds: []
 )
 
 var daughter = Person(
   name: "Daughter",
   color: .green,
-  parentIds: [myUUID],
+  parentId: myUUID,
   childrenIds: []
 )
 
