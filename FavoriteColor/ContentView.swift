@@ -8,28 +8,43 @@
 import ComposableArchitecture
 import SwiftUI
 
-struct Person: Equatable {
+struct Person: Equatable, Identifiable {
+  let id: UUID
   let name: String
   var color: Color
   let parentId: UUID?
   let childrenIds: [UUID]
 }
 
-struct SharedData: Equatable {
-  var people: [UUID: Person]
+@dynamicMemberLookup
+struct BaseState<State>: Equatable where State: Equatable {
+  var people: IdentifiedArrayOf<Person>
+  var state: State
+
+  subscript<Value>(dynamicMember keyPath: WritableKeyPath<State, Value>) -> Value {
+    get { self.state[keyPath: keyPath] }
+    set { self.state[keyPath: keyPath] = newValue }
+  }
+}
+
+extension BaseState: Identifiable where State: Identifiable {
+  var id: State.ID { state.id }
 }
 
 struct AppState: Equatable {
-  var shared: SharedData = .init(people: Family)
-  var myViewState: PersonViewState = .init(id: myUUID)
+  var people = Family
+  var myPersonState: PersonState = .init(personId: myUUID)
 
-  var me: PersonState {
+  var me: BaseState<PersonState> {
     get {
-      .init(shared: shared, viewState: myViewState)
+      .init(
+        people: people,
+        state: myPersonState
+      )
     }
     set {
-      shared = newValue.shared
-      myViewState = newValue.viewState
+      people = newValue.people
+      myPersonState = newValue.state
     }
   }
 }

@@ -5,6 +5,7 @@
 //  Created by Art Huang on 2022/3/30.
 //
 
+import IdentifiedCollections
 import SwiftUI
 
 let parentUUID = UUID()
@@ -13,6 +14,7 @@ let sonUUID = UUID()
 let daughterUUID = UUID()
 
 var parent = Person(
+  id: parentUUID,
   name: "Parent",
   color: .green,
   parentId: nil,
@@ -20,6 +22,7 @@ var parent = Person(
 )
 
 var me = Person(
+  id: myUUID,
   name: "Me",
   color: .green,
   parentId: parentUUID,
@@ -27,6 +30,7 @@ var me = Person(
 )
 
 var son = Person(
+  id: sonUUID,
   name: "Son",
   color: .green,
   parentId: myUUID,
@@ -34,15 +38,16 @@ var son = Person(
 )
 
 var daughter = Person(
+  id: daughterUUID,
   name: "Daughter",
   color: .green,
   parentId: myUUID,
   childrenIds: []
 )
 
-var Family: [UUID: Person] = [
-  parentUUID: parent,
-  myUUID: me,
-  sonUUID: son,
-  daughterUUID: daughter
+var Family: IdentifiedArrayOf<Person> = [
+  parent,
+  me,
+  son,
+  daughter
 ]

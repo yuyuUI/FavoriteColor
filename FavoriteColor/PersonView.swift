@@ -10,47 +10,37 @@ import SwiftUI
 
 indirect enum NextPersonState: Equatable {
   case none
-  case next(PersonViewState)
+  case next(PersonState)
 }
 
-struct PersonViewState: Equatable, Identifiable {
-  let id: UUID
-  var nextId: UUID?
-  var nextPersonViewState: NextPersonState = .none
+struct PersonState: Equatable {
+  let personId: UUID
+  var nextPersonState: NextPersonState = .none
 }
 
-struct PersonState: Equatable, Identifiable {
-  var shared: SharedData
-  var viewState: PersonViewState
-
-  var id: UUID { viewState.id }
-
+extension BaseState where State == PersonState {
   var person: Person? {
     get {
-      shared.people[id]
+      people[id: state.personId]
     }
     set {
-      shared.people[id] = newValue
+      people[id: state.personId] = newValue
     }
   }
 
-  var isPushingNextPerson: Bool {
-    nextPersonState != nil
-  }
-
-  var nextPersonState: PersonState? {
+  var nextPersonFeatureState: BaseState<PersonState>? {
     get {
-      switch viewState.nextPersonViewState {
+      switch state.nextPersonState {
       case .none:
         return nil
-      case let .next(nextViewState):
-        return .init(shared: shared, viewState: nextViewState)
+      case let .next(nextState):
+        return .init(people: people, state: nextState)
       }
     }
     set {
-      guard let nextPersonState = newValue else { return }
-      shared = nextPersonState.shared
-      viewState.nextPersonViewState = .next(nextPersonState.viewState)
+      guard let nextPersonFeatureState = newValue else { return }
+      people = nextPersonFeatureState.people
+      state.nextPersonState = .next(nextPersonFeatureState.state)
     }
   }
 }
@@ -69,7 +59,7 @@ extension PersonEnvironment {
 }
 
 let PersonReducer = Reducer<
-  PersonState,
+  BaseState<PersonState>,
   PersonAction,
   PersonEnvironment
 >.recurse { `self`, state, action, environment in
@@ -77,17 +67,17 @@ let PersonReducer = Reducer<
   case let .changeColor(newColor):
     state.person?.color = newColor
     return .none
-  case let .loadNextPerson(nextId):
-    state.viewState.nextPersonViewState = .next(.init(id: nextId))
+  case let .loadNextPerson(nextPersonId):
+    state.nextPersonState = .next(.init(personId: nextPersonId))
     return .none
   case let .setPushingNextPerson(isPushing):
     if !isPushing {
-      state.viewState.nextPersonViewState = .none
+      state.nextPersonState = .none
     }
     return .none
   case .nextPerson:
     return self.optional().pullback(
-      state: \.nextPersonState,
+      state: \.nextPersonFeatureState,
       action: /PersonAction.nextPerson,
       environment: { $0 }
     )
@@ -96,8 +86,8 @@ let PersonReducer = Reducer<
 }
 
 struct PersonView: View {
-  typealias ViewStoreType = ViewStore<PersonState, PersonAction>
-  let store: Store<PersonState, PersonAction>
+  typealias ViewStoreType = ViewStore<BaseState<PersonState>, PersonAction>
+  let store: Store<BaseState<PersonState>, PersonAction>
 
   var body: some View {
     WithViewStore(store) { viewStore in
@@ -142,7 +132,8 @@ struct PersonView: View {
 
   @ViewBuilder
   private func buildParentStack(_ viewStore: ViewStoreType) -> some View {
-    if let parentId = viewStore.person?.parentId, let parent = viewStore.shared.people[parentId] {
+    if let parentId = viewStore.person?.parentId,
+       let parent = viewStore.people[id: parentId] {
       HStack {
         Text("Parent:")
         Button(parent.name) {
@@ -159,7 +150,7 @@ struct PersonView: View {
         Text("Children:")
 
         ForEach(childrenIds, id: \.self) { childId in
-          if let child = viewStore.shared.people[childId] {
+          if let child = viewStore.people[id: childId] {
             Button(child.name) {
               viewStore.send(.loadNextPerson(childId))
             }
@@ -172,11 +163,14 @@ struct PersonView: View {
   @ViewBuilder
   private func buildNavigationLink(_ viewStore: ViewStoreType) -> some View {
     NavigationLink(isActive: viewStore.binding(
-      get: \.isPushingNextPerson,
+      get: { $0.nextPersonState != .none },
       send: PersonAction.setPushingNextPerson
     )) {
       IfLetStore(
-        store.scope(state: \.nextPersonState, action: PersonAction.nextPerson),
+        store.scope(
+          state: \.nextPersonFeatureState,
+          action: PersonAction.nextPerson
+        ),
         then: PersonView.init
       )
     } label: {
@@ -189,6 +183,7 @@ struct PersonView: View {
   struct PersonView_Previews: PreviewProvider {
     static let id = UUID()
     static let person = Person(
+      id: myUUID,
       name: "Me",
       color: .green,
       parentId: nil,
@@ -200,8 +195,8 @@ struct PersonView: View {
         PersonView(
           store: .init(
             initialState: .init(
-              shared: .init(people: [id: person]),
-              viewState: .init(id: id)
+              people: [person],
+              state: .init(personId: id)
             ),
             reducer: PersonReducer,
             environment: .live
