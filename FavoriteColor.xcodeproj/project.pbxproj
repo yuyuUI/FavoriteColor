@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		DF6C35702845A9E900A78059 /* Tagged in Frameworks */ = {isa = PBXBuildFile; productRef = DF6C356F2845A9E900A78059 /* Tagged */; };
 		DF840BB227F41AD20049B0BA /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = DF840BB127F41AD20049B0BA /* ComposableArchitecture */; };
 		DF840BB427F41B9C0049B0BA /* PersonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF840BB327F41B9C0049B0BA /* PersonView.swift */; };
 		DF840BB627F428740049B0BA /* Constant.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF840BB527F428740049B0BA /* Constant.swift */; };
@@ -31,6 +32,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DF6C35702845A9E900A78059 /* Tagged in Frameworks */,
 				DF840BB227F41AD20049B0BA /* ComposableArchitecture in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -95,6 +97,7 @@
 			name = FavoriteColor;
 			packageProductDependencies = (
 				DF840BB127F41AD20049B0BA /* ComposableArchitecture */,
+				DF6C356F2845A9E900A78059 /* Tagged */,
 			);
 			productName = FavoriteColor;
 			productReference = DFC6FDCC27F41A330082DEA0 /* FavoriteColor.app */;
@@ -126,6 +129,7 @@
 			mainGroup = DFC6FDC327F41A320082DEA0;
 			packageReferences = (
 				DF840BB027F41AD20049B0BA /* XCRemoteSwiftPackageReference "swift-composable-architecture" */,
+				DF6C356E2845A9E900A78059 /* XCRemoteSwiftPackageReference "swift-tagged" */,
 			);
 			productRefGroup = DFC6FDCD27F41A330082DEA0 /* Products */;
 			projectDirPath = "";
@@ -357,6 +361,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		DF6C356E2845A9E900A78059 /* XCRemoteSwiftPackageReference "swift-tagged" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-tagged";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 		DF840BB027F41AD20049B0BA /* XCRemoteSwiftPackageReference "swift-composable-architecture" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/pointfreeco/swift-composable-architecture";
@@ -368,6 +380,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		DF6C356F2845A9E900A78059 /* Tagged */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DF6C356E2845A9E900A78059 /* XCRemoteSwiftPackageReference "swift-tagged" */;
+			productName = Tagged;
+		};
 		DF840BB127F41AD20049B0BA /* ComposableArchitecture */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = DF840BB027F41AD20049B0BA /* XCRemoteSwiftPackageReference "swift-composable-architecture" */;

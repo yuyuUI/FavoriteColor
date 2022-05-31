@@ -8,40 +8,40 @@
 import IdentifiedCollections
 import SwiftUI
 
-let parentUUID = UUID()
-let myUUID = UUID()
-let sonUUID = UUID()
-let daughterUUID = UUID()
+let parentId = Person.Id(rawValue: .init())
+let myId = Person.Id(rawValue: .init())
+let sonId = Person.Id(rawValue: .init())
+let daughterId = Person.Id(rawValue: .init())
 
 var parent = Person(
-  id: parentUUID,
+  id: parentId,
   name: "Parent",
   color: .green,
   parentId: nil,
-  childrenIds: [myUUID]
+  childrenIds: [myId]
 )
 
 var me = Person(
-  id: myUUID,
+  id: myId,
   name: "Me",
   color: .green,
-  parentId: parentUUID,
-  childrenIds: [sonUUID, daughterUUID]
+  parentId: parentId,
+  childrenIds: [sonId, daughterId]
 )
 
 var son = Person(
-  id: sonUUID,
+  id: sonId,
   name: "Son",
   color: .green,
-  parentId: myUUID,
+  parentId: myId,
   childrenIds: []
 )
 
 var daughter = Person(
-  id: daughterUUID,
+  id: daughterId,
   name: "Daughter",
   color: .green,
-  parentId: myUUID,
+  parentId: myId,
   childrenIds: []
 )
 

@@ -55,6 +55,15 @@
       }
     },
     {
+      "identity" : "swift-tagged",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/pointfreeco/swift-tagged",
+      "state" : {
+        "branch" : "main",
+        "revision" : "f3f773a5e13f3c8f0ab1ce2ae6378058acefa87d"
+      }
+    },
+    {
       "identity" : "xctest-dynamic-overlay",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/xctest-dynamic-overlay",

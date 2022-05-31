@@ -14,7 +14,7 @@ indirect enum NextPersonState: Equatable {
 }
 
 struct PersonState: Equatable {
-  let personId: UUID
+  let personId: Person.Id
   var nextPersonState: NextPersonState = .none
 }
 
@@ -47,7 +47,7 @@ extension BaseState where State == PersonState {
 
 indirect enum PersonAction: Equatable {
   case changeColor(Color)
-  case loadNextPerson(UUID)
+  case loadNextPerson(Person.Id)
   case setPushingNextPerson(Bool)
   case nextPerson(PersonAction)
 }
@@ -91,7 +91,7 @@ struct PersonView: View {
 
   struct ViewState: Equatable {
     struct Member: Equatable, Identifiable {
-      let id: UUID
+      let id: Person.Id
       let name: String
     }
 
@@ -220,9 +220,8 @@ private extension PersonView.ViewState {
 
 #if DEBUG
   struct PersonView_Previews: PreviewProvider {
-    static let id = UUID()
     static let person = Person(
-      id: myUUID,
+      id: myId,
       name: "Me",
       color: .green,
       parentId: nil,
@@ -235,7 +234,7 @@ private extension PersonView.ViewState {
           store: .init(
             initialState: .init(
               people: [person],
-              state: .init(personId: id)
+              state: .init(personId: myId)
             ),
             reducer: PersonReducer,
             environment: .live

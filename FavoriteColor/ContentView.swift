@@ -7,13 +7,16 @@
 
 import ComposableArchitecture
 import SwiftUI
+import Tagged
 
 struct Person: Equatable, Identifiable {
-  let id: UUID
+  typealias Id = Tagged<Person, UUID>
+
+  let id: Id
   let name: String
   var color: Color
-  let parentId: UUID?
-  let childrenIds: [UUID]
+  let parentId: Id?
+  let childrenIds: [Id]
 }
 
 @dynamicMemberLookup
@@ -33,7 +36,7 @@ extension BaseState: Identifiable where State: Identifiable {
 
 struct AppState: Equatable {
   var people = Family
-  var myPersonState: PersonState = .init(personId: myUUID)
+  var myPersonState: PersonState = .init(personId: myId)
 
   var me: BaseState<PersonState> {
     get {
