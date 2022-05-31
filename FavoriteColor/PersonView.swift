@@ -86,11 +86,23 @@ let PersonReducer = Reducer<
 }
 
 struct PersonView: View {
-  typealias ViewStoreType = ViewStore<BaseState<PersonState>, PersonAction>
+  typealias ViewStoreType = ViewStore<ViewState, PersonAction>
   let store: Store<BaseState<PersonState>, PersonAction>
 
+  struct ViewState: Equatable {
+    struct Member: Equatable, Identifiable {
+      let id: UUID
+      let name: String
+    }
+
+    let person: Person?
+    let parent: Member?
+    let children: IdentifiedArrayOf<Member>
+    let isPushingNextPerson: Bool
+  }
+
   var body: some View {
-    WithViewStore(store) { viewStore in
+    WithViewStore(store.scope(state: ViewState.init)) { viewStore in
       VStack(spacing: 8) {
         buildColor(viewStore)
         Divider()
@@ -132,12 +144,11 @@ struct PersonView: View {
 
   @ViewBuilder
   private func buildParentStack(_ viewStore: ViewStoreType) -> some View {
-    if let parentId = viewStore.person?.parentId,
-       let parent = viewStore.people[id: parentId] {
+    if let parent = viewStore.parent {
       HStack {
         Text("Parent:")
         Button(parent.name) {
-          viewStore.send(.loadNextPerson(parentId))
+          viewStore.send(.loadNextPerson(parent.id))
         }
       }
     }
@@ -145,15 +156,13 @@ struct PersonView: View {
 
   @ViewBuilder
   private func buildChildrenStack(_ viewStore: ViewStoreType) -> some View {
-    if let childrenIds = viewStore.person?.childrenIds, !childrenIds.isEmpty {
+    if !viewStore.children.isEmpty {
       HStack {
         Text("Children:")
 
-        ForEach(childrenIds, id: \.self) { childId in
-          if let child = viewStore.people[id: childId] {
-            Button(child.name) {
-              viewStore.send(.loadNextPerson(childId))
-            }
+        ForEach(viewStore.children) { child in
+          Button(child.name) {
+            viewStore.send(.loadNextPerson(child.id))
           }
         }
       }
@@ -163,7 +172,7 @@ struct PersonView: View {
   @ViewBuilder
   private func buildNavigationLink(_ viewStore: ViewStoreType) -> some View {
     NavigationLink(isActive: viewStore.binding(
-      get: { $0.nextPersonState != .none },
+      get: \.isPushingNextPerson,
       send: PersonAction.setPushingNextPerson
     )) {
       IfLetStore(
@@ -176,6 +185,36 @@ struct PersonView: View {
     } label: {
       EmptyView()
     }
+  }
+}
+
+private extension PersonView.ViewState {
+  init(_ state: BaseState<PersonState>) {
+    let parentMember: Member?
+    if let parentId = state.person?.parentId,
+       let parent = state.people[id: parentId] {
+      parentMember = .init(id: parentId, name: parent.name)
+    } else {
+      parentMember = nil
+    }
+
+    let childMembers: IdentifiedArrayOf<Member>
+    if let childIds = state.person?.childrenIds {
+      childMembers = IdentifiedArray(
+        uniqueElements: childIds
+          .compactMap { state.people[id: $0] }
+          .map { Member(id: $0.id, name: $0.name) }
+      )
+    } else {
+      childMembers = []
+    }
+
+    self.init(
+      person: state.person,
+      parent: parentMember,
+      children: childMembers,
+      isPushingNextPerson: state.nextPersonState != .none
+    )
   }
 }
 
