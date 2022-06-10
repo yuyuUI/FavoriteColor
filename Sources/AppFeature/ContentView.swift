@@ -72,8 +72,8 @@ let AppReducer: Reducer<
   environment: { _ in .live }
 )
 .debug()
-
-struct ContentView: View {
+#if os(iOS)
+struct IOSContentView: View {
   typealias ViewStoreType = ViewStore<AppState, AppAction>
   let store: Store<AppState, AppAction>
 
@@ -91,11 +91,30 @@ struct ContentView: View {
     }
   }
 }
+#elseif os(macOS)
+struct IOSContentView: View {
+  typealias ViewStoreType = ViewStore<AppState, AppAction>
+  let store: Store<AppState, AppAction>
+
+  var body: some View {
+    WithViewStore(store) { viewStore in
+      NavigationView {
+        PersonView(
+          store: store.scope(
+            state: \.me,
+            action: AppAction.person
+          )
+        )
+      }
+    }
+  }
+}
+#endif
 
 #if DEBUG
   struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-      ContentView(store: .init(
+      IOSContentView(store: .init(
         initialState: .init(),
         reducer: AppReducer,
         environment: .live
