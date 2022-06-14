@@ -31,10 +31,18 @@ final class Atests: XCTestCase {
 
     func test() throws {
         let store = TestStore(initialState: AppState(), reducer: AppReducer, environment: AppEnvironment())
+        
         color(id: myId, level: 0, color: .blue, store)
         push(level: 0, id: sonId, store)
+        
         color(id: sonId, level: 1, color: .blue, store)
         push(level: 1, id: myId, store)
+        
+        color(id: myId, level: 2, color: .gray, store)
+        push(level: 2, id: daughterId, store)
+        
+        color(id: daughterId, level: 3, color: .yellow, store)
+        push(level: 3, id: myId, store)
     }
 }
 

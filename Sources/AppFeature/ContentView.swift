@@ -19,21 +19,6 @@ struct Person: Equatable, Identifiable {
   let childrenIds: [Id]
 }
 
-@dynamicMemberLookup
-struct BaseState<State>: Equatable where State: Equatable {
-  var people: IdentifiedArrayOf<Person>
-  var state: State
-
-  subscript<Value>(dynamicMember keyPath: WritableKeyPath<State, Value>) -> Value {
-    get { self.state[keyPath: keyPath] }
-    set { self.state[keyPath: keyPath] = newValue }
-  }
-}
-
-extension BaseState: Identifiable where State: Identifiable {
-  var id: State.ID { state.id }
-}
-
 struct AppState: Equatable {
    
   var people = Family

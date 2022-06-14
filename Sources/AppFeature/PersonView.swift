@@ -23,33 +23,6 @@ class PersonState: Equatable {
     var nextPersonState: PersonState? = .none
 }
 
-extension BaseState where State == PersonState {
-    var person: Person? {
-        get {
-            people[id: state.personId]
-        }
-        set {
-            people[id: state.personId] = newValue
-        }
-    }
-
-    var nextPersonFeatureState: BaseState<PersonState>? {
-        get {
-            switch state.nextPersonState {
-            case .none:
-                return nil
-            case let .some(nextState):
-                return .init(people: people, state: nextState)
-            }
-        }
-        set {
-            guard let nextPersonFeatureState = newValue else { return }
-            people = nextPersonFeatureState.people
-            state.nextPersonState = .some(nextPersonFeatureState.state)
-        }
-    }
-}
-
 indirect enum PersonAction: Equatable {
     case changeColor(Color)
     case loadNextPerson(Person.Id)
@@ -119,7 +92,39 @@ struct PersonView: View {
             .navigationTitle(viewStore.person?.name ?? "")
         }
     }
+}
 
+private extension PersonView.ViewState {
+    init(_ state: BaseState<PersonState>) {
+        let parentMember: Member?
+        if let parentId = state.person?.parentId,
+           let parent = state.people[id: parentId] {
+            parentMember = .init(id: parentId, name: parent.name)
+        } else {
+            parentMember = nil
+        }
+
+        let childMembers: IdentifiedArrayOf<Member>
+        if let childIds = state.person?.childrenIds {
+            childMembers = IdentifiedArray(
+                uniqueElements: childIds
+                    .compactMap { state.people[id: $0] }
+                    .map { Member(id: $0.id, name: $0.name) }
+            )
+        } else {
+            childMembers = []
+        }
+
+        self.init(
+            person: state.person,
+            parent: parentMember,
+            children: childMembers,
+            isPushingNextPerson: state.nextPersonState != .none
+        )
+    }
+}
+
+extension PersonView {
     @ViewBuilder
     private func buildColor(_ viewStore: ViewStoreType) -> some View {
         if let color = viewStore.person?.color {
@@ -190,36 +195,6 @@ struct PersonView: View {
         } label: {
             EmptyView()
         }
-    }
-}
-
-private extension PersonView.ViewState {
-    init(_ state: BaseState<PersonState>) {
-        let parentMember: Member?
-        if let parentId = state.person?.parentId,
-           let parent = state.people[id: parentId] {
-            parentMember = .init(id: parentId, name: parent.name)
-        } else {
-            parentMember = nil
-        }
-
-        let childMembers: IdentifiedArrayOf<Member>
-        if let childIds = state.person?.childrenIds {
-            childMembers = IdentifiedArray(
-                uniqueElements: childIds
-                    .compactMap { state.people[id: $0] }
-                    .map { Member(id: $0.id, name: $0.name) }
-            )
-        } else {
-            childMembers = []
-        }
-
-        self.init(
-            person: state.person,
-            parent: parentMember,
-            children: childMembers,
-            isPushingNextPerson: state.nextPersonState != .none
-        )
     }
 }
 
