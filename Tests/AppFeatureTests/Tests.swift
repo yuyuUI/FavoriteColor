@@ -13,11 +13,12 @@ import XCTest
 final class Atests: XCTestCase {
     func test() throws {
         let testStore = TestStore(initialState: AppState(), reducer: AppReducer, environment: AppEnvironment())
-        var action = PersonAction.changeColor(.blue)
+        var deep = 0
+        var action = level(action: .changeColor(.blue), level: deep)
         testStore.send(.person(action)) {
             $0.people[id: myId]!.color = .blue
         }
-        var receive = loadNext(&action, id: sonId)
+        let receive = loadNext(&action, id: sonId)
         testStore.send(.person(action))
         testStore.receive(.person(receive))
         XCTAssertEqual(action, .loadNextPerson(sonId))
@@ -26,7 +27,15 @@ final class Atests: XCTestCase {
         testStore.send(.person(action)) {
             $0.people[id: sonId]?.color = .gray
         }
-        testStore.send(.person(.nextPerson(.setPushingNextPerson(false))))
+
+        
+    }
+
+    func testLoadNext() {
+        var action = PersonAction.nextPerson(.setPushingNextPerson(true))
+        let id = Person.Id(rawValue: UUID())
+        _ = loadNext(&action, id: id)
+        XCTAssertEqual(action, .nextPerson(.loadNextPerson(id)))
     }
 }
 
@@ -36,13 +45,27 @@ func changeColor(_ action: inout PersonAction, _ color: Color) {
         action = .nextPerson(.changeColor(color))
     case var .nextPerson(personAction):
         changeColor(&personAction, color)
-        action = personAction
+        action = .nextPerson(personAction)
     default:
         action = .changeColor(color)
     }
 }
 
 func loadNext(_ action: inout PersonAction, id: Person.Id) -> PersonAction {
-    action = .loadNextPerson(id)
+    switch action {
+    case .nextPerson(var personAction):
+        _ = loadNext(&personAction, id: id)
+        action = .nextPerson(personAction)
+    default:
+        action = .loadNextPerson(id)
+    }
     return .setPushingNextPerson(true)
+}
+
+func level(action: PersonAction, level: Int) -> PersonAction {
+    var action = action
+    for _ in 0..<level {
+        action = .nextPerson(action)
+    }
+    return action
 }
