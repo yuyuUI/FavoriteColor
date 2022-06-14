@@ -73,48 +73,58 @@ let AppReducer: Reducer<
 )
 .debug()
 #if os(iOS)
-struct IOSContentView: View {
-  typealias ViewStoreType = ViewStore<AppState, AppAction>
-  let store: Store<AppState, AppAction>
+  public struct ContentView: View {
+    typealias ViewStoreType = ViewStore<AppState, AppAction>
+    let store: Store<AppState, AppAction>
 
-  var body: some View {
-    WithViewStore(store) { viewStore in
-      NavigationView {
-        PersonView(
-          store: store.scope(
-            state: \.me,
-            action: AppAction.person
+    public var body: some View {
+      WithViewStore(store) { viewStore in
+        NavigationView {
+          PersonView(
+            store: store.scope(
+              state: \.me,
+              action: AppAction.person
+            )
           )
-        )
+        }
+        .navigationViewStyle(.stack)
       }
-      .navigationViewStyle(.stack)
     }
   }
+extension ContentView {
+  public init() {
+    store = .init(
+      initialState: .init(),
+      reducer: AppReducer,
+      environment: .live
+    )
+  }
 }
+
 #elseif os(macOS)
-struct IOSContentView: View {
-  typealias ViewStoreType = ViewStore<AppState, AppAction>
-  let store: Store<AppState, AppAction>
+  struct IOSContentView: View {
+    typealias ViewStoreType = ViewStore<AppState, AppAction>
+    let store: Store<AppState, AppAction>
 
-  var body: some View {
-    WithViewStore(store) { viewStore in
-      NavigationView {
-        PersonView(
-          store: store.scope(
-            state: \.me,
-            action: AppAction.person
+    var body: some View {
+      WithViewStore(store) { viewStore in
+        NavigationView {
+          PersonView(
+            store: store.scope(
+              state: \.me,
+              action: AppAction.person
+            )
           )
-        )
+        }
       }
     }
   }
-}
 #endif
 
 #if DEBUG
   struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-      IOSContentView(store: .init(
+      ContentView(store: .init(
         initialState: .init(),
         reducer: AppReducer,
         environment: .live

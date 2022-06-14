@@ -7,24 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		DF6C35702845A9E900A78059 /* Tagged in Frameworks */ = {isa = PBXBuildFile; productRef = DF6C356F2845A9E900A78059 /* Tagged */; };
-		DF840BB227F41AD20049B0BA /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = DF840BB127F41AD20049B0BA /* ComposableArchitecture */; };
-		DF840BB427F41B9C0049B0BA /* PersonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF840BB327F41B9C0049B0BA /* PersonView.swift */; };
-		DF840BB627F428740049B0BA /* Constant.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF840BB527F428740049B0BA /* Constant.swift */; };
-		DFC6FDD027F41A330082DEA0 /* FavoriteColorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFC6FDCF27F41A330082DEA0 /* FavoriteColorApp.swift */; };
-		DFC6FDD227F41A330082DEA0 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFC6FDD127F41A330082DEA0 /* ContentView.swift */; };
 		DFC6FDD427F41A330082DEA0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DFC6FDD327F41A330082DEA0 /* Assets.xcassets */; };
 		DFC6FDD727F41A330082DEA0 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DFC6FDD627F41A330082DEA0 /* Preview Assets.xcassets */; };
+		F09BC15A28588EA700350C98 /* AppFeature in Frameworks */ = {isa = PBXBuildFile; productRef = F09BC15928588EA700350C98 /* AppFeature */; };
+		F0F159D9285334B800E77199 /* FavoriteColorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0F159D8285334B800E77199 /* FavoriteColorApp.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		DF840BB327F41B9C0049B0BA /* PersonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonView.swift; sourceTree = "<group>"; };
-		DF840BB527F428740049B0BA /* Constant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constant.swift; sourceTree = "<group>"; };
 		DFC6FDCC27F41A330082DEA0 /* FavoriteColor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FavoriteColor.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		DFC6FDCF27F41A330082DEA0 /* FavoriteColorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoriteColorApp.swift; sourceTree = "<group>"; };
-		DFC6FDD127F41A330082DEA0 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		DFC6FDD327F41A330082DEA0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		DFC6FDD627F41A330082DEA0 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		F0F159D8285334B800E77199 /* FavoriteColorApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FavoriteColorApp.swift; sourceTree = "<group>"; };
+		F0F159DA2853354300E77199 /* FavoriteColor */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FavoriteColor; path = ..; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -32,8 +26,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DF6C35702845A9E900A78059 /* Tagged in Frameworks */,
-				DF840BB227F41AD20049B0BA /* ComposableArchitecture in Frameworks */,
+				F09BC15A28588EA700350C98 /* AppFeature in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -43,8 +36,12 @@
 		DFC6FDC327F41A320082DEA0 = {
 			isa = PBXGroup;
 			children = (
-				DFC6FDCE27F41A330082DEA0 /* FavoriteColor */,
+				F0F159DA2853354300E77199 /* FavoriteColor */,
+				DFC6FDD327F41A330082DEA0 /* Assets.xcassets */,
+				F0F159D7285334B800E77199 /* iOS */,
+				DFC6FDD527F41A330082DEA0 /* Preview Content */,
 				DFC6FDCD27F41A330082DEA0 /* Products */,
+				F09BC15828588EA700350C98 /* Frameworks */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -58,25 +55,27 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		DFC6FDCE27F41A330082DEA0 /* FavoriteColor */ = {
-			isa = PBXGroup;
-			children = (
-				DF840BB527F428740049B0BA /* Constant.swift */,
-				DFC6FDD127F41A330082DEA0 /* ContentView.swift */,
-				DFC6FDCF27F41A330082DEA0 /* FavoriteColorApp.swift */,
-				DF840BB327F41B9C0049B0BA /* PersonView.swift */,
-				DFC6FDD327F41A330082DEA0 /* Assets.xcassets */,
-				DFC6FDD527F41A330082DEA0 /* Preview Content */,
-			);
-			path = FavoriteColor;
-			sourceTree = "<group>";
-		};
 		DFC6FDD527F41A330082DEA0 /* Preview Content */ = {
 			isa = PBXGroup;
 			children = (
 				DFC6FDD627F41A330082DEA0 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		F09BC15828588EA700350C98 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		F0F159D7285334B800E77199 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				F0F159D8285334B800E77199 /* FavoriteColorApp.swift */,
+			);
+			path = iOS;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -96,8 +95,7 @@
 			);
 			name = FavoriteColor;
 			packageProductDependencies = (
-				DF840BB127F41AD20049B0BA /* ComposableArchitecture */,
-				DF6C356F2845A9E900A78059 /* Tagged */,
+				F09BC15928588EA700350C98 /* AppFeature */,
 			);
 			productName = FavoriteColor;
 			productReference = DFC6FDCC27F41A330082DEA0 /* FavoriteColor.app */;
@@ -128,8 +126,6 @@
 			);
 			mainGroup = DFC6FDC327F41A320082DEA0;
 			packageReferences = (
-				DF840BB027F41AD20049B0BA /* XCRemoteSwiftPackageReference "swift-composable-architecture" */,
-				DF6C356E2845A9E900A78059 /* XCRemoteSwiftPackageReference "swift-tagged" */,
 			);
 			productRefGroup = DFC6FDCD27F41A330082DEA0 /* Products */;
 			projectDirPath = "";
@@ -157,10 +153,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DF840BB427F41B9C0049B0BA /* PersonView.swift in Sources */,
-				DFC6FDD227F41A330082DEA0 /* ContentView.swift in Sources */,
-				DFC6FDD027F41A330082DEA0 /* FavoriteColorApp.swift in Sources */,
-				DF840BB627F428740049B0BA /* Constant.swift in Sources */,
+				F0F159D9285334B800E77199 /* FavoriteColorApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -217,7 +210,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.2;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -271,7 +264,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.2;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -288,7 +281,8 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"FavoriteColor/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"Preview Content\"";
+				DEVELOPMENT_TEAM = 4TD9FXY926;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -316,7 +310,8 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"FavoriteColor/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"Preview Content\"";
+				DEVELOPMENT_TEAM = 4TD9FXY926;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -360,35 +355,10 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-		DF6C356E2845A9E900A78059 /* XCRemoteSwiftPackageReference "swift-tagged" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/pointfreeco/swift-tagged";
-			requirement = {
-				branch = main;
-				kind = branch;
-			};
-		};
-		DF840BB027F41AD20049B0BA /* XCRemoteSwiftPackageReference "swift-composable-architecture" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/pointfreeco/swift-composable-architecture";
-			requirement = {
-				branch = main;
-				kind = branch;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
 /* Begin XCSwiftPackageProductDependency section */
-		DF6C356F2845A9E900A78059 /* Tagged */ = {
+		F09BC15928588EA700350C98 /* AppFeature */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = DF6C356E2845A9E900A78059 /* XCRemoteSwiftPackageReference "swift-tagged" */;
-			productName = Tagged;
-		};
-		DF840BB127F41AD20049B0BA /* ComposableArchitecture */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = DF840BB027F41AD20049B0BA /* XCRemoteSwiftPackageReference "swift-composable-architecture" */;
-			productName = ComposableArchitecture;
+			productName = AppFeature;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
