@@ -102,7 +102,7 @@ extension ContentView {
 }
 
 #elseif os(macOS)
-  struct IOSContentView: View {
+  struct MacOSContentView: View {
     typealias ViewStoreType = ViewStore<AppState, AppAction>
     let store: Store<AppState, AppAction>
 
@@ -121,14 +121,14 @@ extension ContentView {
   }
 #endif
 
-#if DEBUG
-  struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-      ContentView(store: .init(
-        initialState: .init(),
-        reducer: AppReducer,
-        environment: .live
-      ))
-    }
-  }
-#endif
+//#if DEBUG
+//  struct ContentView_Previews: PreviewProvider {
+//    static var previews: some View {
+//      ContentView(store: .init(
+//        initialState: .init(),
+//        reducer: AppReducer,
+//        environment: .live
+//      ))
+//    }
+//  }
+//#endif

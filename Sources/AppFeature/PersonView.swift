@@ -8,14 +8,20 @@
 import ComposableArchitecture
 import SwiftUI
 
-indirect enum NextPersonState: Equatable {
-  case none
-  case next(PersonState)
-}
 
-struct PersonState: Equatable {
+class PersonState: Equatable {
+    internal init(personId: Person.Id, nextPersonState: PersonState? = .none) {
+        self.personId = personId
+        self.nextPersonState = nextPersonState
+    }
+    
+    static func == (lhs: PersonState, rhs: PersonState) -> Bool {
+        lhs.personId == rhs.personId &&
+        lhs.nextPersonState == rhs.nextPersonState
+    }
+    
   let personId: Person.Id
-  var nextPersonState: NextPersonState = .none
+  var nextPersonState: PersonState? = .none
 }
 
 extension BaseState where State == PersonState {
@@ -33,14 +39,14 @@ extension BaseState where State == PersonState {
       switch state.nextPersonState {
       case .none:
         return nil
-      case let .next(nextState):
+      case let .some(nextState):
         return .init(people: people, state: nextState)
       }
     }
     set {
       guard let nextPersonFeatureState = newValue else { return }
       people = nextPersonFeatureState.people
-      state.nextPersonState = .next(nextPersonFeatureState.state)
+      state.nextPersonState = .some(nextPersonFeatureState.state)
     }
   }
 }
@@ -68,7 +74,7 @@ let PersonReducer = Reducer<
     state.person?.color = newColor
     return .none
   case let .loadNextPerson(nextPersonId):
-    state.nextPersonState = .next(.init(personId: nextPersonId))
+    state.nextPersonState = .some(.init(personId: nextPersonId))
     return .none
   case let .setPushingNextPerson(isPushing):
     if !isPushing {
