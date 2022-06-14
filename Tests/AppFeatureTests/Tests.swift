@@ -8,6 +8,7 @@
 @testable import AppFeature
 import ComposableArchitecture
 import Foundation
+import SwiftUI
 import XCTest
 final class Atests: XCTestCase {
     func test() throws {
@@ -16,27 +17,32 @@ final class Atests: XCTestCase {
         testStore.send(.person(action)) {
             $0.people[id: myId]!.color = .blue
         }
-        action = .loadNextPerson(sonId)
+        var receive = loadNext(&action, id: sonId)
         testStore.send(.person(action))
-        testStore.receive(.person(.setPushingNextPerson(true)))
+        testStore.receive(.person(receive))
+        XCTAssertEqual(action, .loadNextPerson(sonId))
 
-        testStore.send(.person(.nextPerson(.changeColor(.gray)))) {
+        changeColor(&action, .gray)
+        testStore.send(.person(action)) {
             $0.people[id: sonId]?.color = .gray
         }
         testStore.send(.person(.nextPerson(.setPushingNextPerson(false))))
     }
 }
 
-func loadNext(_ action: inout PersonAction, id: Person.Id) -> PersonAction {
+func changeColor(_ action: inout PersonAction, _ color: Color) {
     switch action {
-    case let .changeColor(color):
-        break
-    case let .loadNextPerson(id):
-        break
-    case let .setPushingNextPerson(bool):
-        break
-    case let .nextPerson(personAction):
-        break
+    case .loadNextPerson:
+        action = .nextPerson(.changeColor(color))
+    case var .nextPerson(personAction):
+        changeColor(&personAction, color)
+        action = personAction
+    default:
+        action = .changeColor(color)
     }
-    return action
+}
+
+func loadNext(_ action: inout PersonAction, id: Person.Id) -> PersonAction {
+    action = .loadNextPerson(id)
+    return .setPushingNextPerson(true)
 }
