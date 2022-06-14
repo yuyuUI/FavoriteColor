@@ -8,10 +8,10 @@
 import IdentifiedCollections
 import SwiftUI
 
-let parentId = Person.Id(rawValue: .init())
-let myId = Person.Id(rawValue: .init())
-let sonId = Person.Id(rawValue: .init())
-let daughterId = Person.Id(rawValue: .init())
+let parentId = Person.Id(rawValue: UUID(uuidString: "00000000-0000-0000-0000-000000000000")!)
+let myId = Person.Id(rawValue: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!)
+let sonId = Person.Id(rawValue: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!)
+let daughterId = Person.Id(rawValue: UUID(uuidString: "00000000-0000-0000-0000-000000000003")!)
 
 var parent = Person(
   id: parentId,

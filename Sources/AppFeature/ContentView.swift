@@ -35,6 +35,7 @@ extension BaseState: Identifiable where State: Identifiable {
 }
 
 struct AppState: Equatable {
+   
   var people = Family
   var myPersonState: PersonState = .init(personId: myId)
 
