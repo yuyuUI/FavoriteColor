@@ -74,7 +74,7 @@ let PersonReducer = Reducer<
         return .none
     case let .loadNextPerson(nextPersonId):
         state.nextPersonState = .some(.init(personId: nextPersonId))
-        return .none
+        return .init(value: .setPushingNextPerson(true))
     case let .setPushingNextPerson(isPushing):
         if !isPushing {
             state.nextPersonState = .none
