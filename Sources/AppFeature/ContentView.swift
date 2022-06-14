@@ -20,7 +20,6 @@ struct Person: Equatable, Identifiable {
 }
 
 struct AppState: Equatable {
-   
   var people = Family
   var myPersonState: PersonState = .init(personId: myId)
 
@@ -77,15 +76,16 @@ let AppReducer: Reducer<
       }
     }
   }
-extension ContentView {
-  public init() {
-    store = .init(
-      initialState: .init(),
-      reducer: AppReducer,
-      environment: .live
-    )
+
+  public extension ContentView {
+    init() {
+      store = .init(
+        initialState: .init(),
+        reducer: AppReducer,
+        environment: .live
+      )
+    }
   }
-}
 
 #elseif os(macOS)
   struct MacOSContentView: View {
@@ -107,7 +107,7 @@ extension ContentView {
   }
 #endif
 
-//#if DEBUG
+// #if DEBUG
 //  struct ContentView_Previews: PreviewProvider {
 //    static var previews: some View {
 //      ContentView(store: .init(
@@ -117,4 +117,4 @@ extension ContentView {
 //      ))
 //    }
 //  }
-//#endif
+// #endif
